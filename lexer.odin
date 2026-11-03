@@ -6,7 +6,7 @@ import "core:strconv"
 import "core:strings"
 
 Token_Kind :: enum {
-	Print, Input, Length, List, Map, With,
+	Print, Input, Length, To_Number, To_String, List, Map, With,
 	If, Else, Foreach, While, Then, In, From,
 	Let, Function, Return,
 	And, Or, Not,
@@ -36,6 +36,8 @@ keyword_kind :: proc(word: string) -> (Token_Kind, bool) {
 	switch word {
 	case "print":                   return .Print, true
 	case "input":                   return .Input, true
+	case "string":                  return .To_String, true
+	case "number":                  return .To_Number, true
 	case "length":                  return .Length, true
 	case "list":                    return .List, true
 	case "map":                     return .Map, true
