@@ -66,6 +66,34 @@ destroy_scope :: proc() {
 	}
 }
 
+copy_value :: proc(v: Value, seen: ^map[rawptr]Value) -> Value {
+	#partial switch x in v {
+	case ^List:
+		if existing, ok := seen[rawptr(x)]; ok {
+			return existing
+		}
+		new_list := new(List)
+		seen[rawptr(x)] = new_list
+		for item in x.items {
+			append(&new_list.items, copy_value(item, seen))
+		}
+		return new_list
+
+	case ^Map:
+		if existing, ok := seen[rawptr(x)]; ok {
+			return existing
+		}
+		new_map := new(Map)
+		seen[rawptr(x)] = new_map
+		for key in x.order {
+			map_set(new_map, key, copy_value(x.entries[key], seen))
+		}
+		return new_map
+	}
+
+	return v
+}
+
 get_var :: proc(name: string, line: int) -> Value {
 	#reverse for scope in scopes {
 		if value, ok := scope[name]; ok {
@@ -513,6 +541,10 @@ eval :: proc(e: Expr) -> Value {
 			append(&list.items, eval(element))
 		}
 		return list
+	case ^Copy_Expr:
+		seen := make(map[rawptr]Value)
+		defer delete(seen)
+		return copy_value(eval(n.value), &seen)
 	case ^Map_Lit:
 		m := new(Map)
 		for key_expr, i in n.keys {
