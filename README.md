@@ -1,6 +1,6 @@
 # Pluma
 
-Tramezzo programs end in `.pluma`.
+Pluma programs end in `.pluma`.
 
 ```
 # this is a comment
