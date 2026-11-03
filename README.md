@@ -77,7 +77,7 @@ print add with 2, 3
 
 `list with a, b, c` creates a list. `list with null` creates an empty list.
 
-### Matricies
+### Matrices
 ```
 let matrix = list with
     (list with 1, 2, 3),
