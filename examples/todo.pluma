@@ -1,0 +1,32 @@
+# TODO list
+
+let todo_list = list with null
+
+while true then
+    print "1: NEW"
+    print "2: LIST"
+    print "3: DONE"
+    let choice = number input ">> "
+
+    if choice == 1 then
+        let new_todo = map with
+            "name": null
+            "description": null
+            "state": "undone"
+
+        "name" from new_todo = input "Name: "
+        "description" from new_todo = input "Description: "
+
+        todo_list = todo_list + (list with new_todo)
+
+    if choice == 2 then
+        let i = 0
+        foreach t in todo_list then
+            print (string i) + "."
+            print t
+            i = i+1
+
+    if choice == 3 then
+        let index = number input "Insert the index of your TODO: "
+        let chosen_todo = index from todo_list
+        "state" from chosen_todo = "done"
