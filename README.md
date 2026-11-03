@@ -110,6 +110,9 @@ print 1 from (2 from matrix)
 
 `length value` gives the number of elements in a list, entries in a map, or characters in a string.
 
+## copy
+`copy identifier` copies the contents of a map or list instead of a reference
+
 ```
 print length "hello"
 print length julia
