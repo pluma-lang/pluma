@@ -1,6 +1,5 @@
 package tramezzo
 
-import "core:rexcode/isa/ppc_vle/tablegen/generated"
 Expr :: union {
 	^Int_Lit,
 	^Float_Lit,
@@ -16,22 +15,24 @@ Expr :: union {
 	^Call,
 	^Input_Expr,
 	^Length_Expr,
+	^Convert_Expr
 }
 
-Int_Lit    :: struct { value: i64 }
-Float_Lit  :: struct { value: f64 }
-String_Lit :: struct { value: string }
-Bool_Lit   :: struct { value: bool }
-Null_Lit   :: struct { line: int }
-Var        :: struct { name: string, line: int }
-Unary      :: struct { op: Token_Kind, operand: Expr, line: int }
-Binary     :: struct { op: Token_Kind, left, right: Expr, line: int }
-List_Lit   :: struct { elements: [dynamic]Expr }
-Map_Lit    :: struct { keys, values: [dynamic]Expr, line: int }
-Access     :: struct { index, target: Expr, line: int }
-Call       :: struct { callee: Expr, arguments: [dynamic]Expr, line: int }
-Input_Expr :: struct { prompt: Expr }
-Length_Expr :: struct { value: Expr, line: int }
+Int_Lit      :: struct { value: i64 }
+Float_Lit    :: struct { value: f64 }
+String_Lit   :: struct { value: string }
+Bool_Lit     :: struct { value: bool }
+Null_Lit     :: struct { line: int }
+Var          :: struct { name: string, line: int }
+Unary        :: struct { op: Token_Kind, operand: Expr, line: int }
+Binary       :: struct { op: Token_Kind, left, right: Expr, line: int }
+List_Lit     :: struct { elements: [dynamic]Expr }
+Map_Lit      :: struct { keys, values: [dynamic]Expr, line: int }
+Access       :: struct { index, target: Expr, line: int }
+Call         :: struct { callee: Expr, arguments: [dynamic]Expr, line: int }
+Input_Expr   :: struct { prompt: Expr }
+Length_Expr  :: struct { value: Expr, line: int }
+Convert_Expr :: struct { target: Token_Kind, value: Expr, line: int }
 
 Stmt :: union {
 	^Let_Stmt,
@@ -42,6 +43,7 @@ Stmt :: union {
 	^Return_Stmt,
 	^Function_Stmt,
 	^Call_Stmt,
+	^Assign_Stmt,
 }
 
 Let_Stmt      :: struct { name: string, value: Expr }
@@ -52,6 +54,7 @@ While_Stmt    :: struct { condition: Expr, body: [dynamic]Stmt }
 Return_Stmt   :: struct { value: Expr }
 Function_Stmt :: struct { name: string, params: [dynamic]string, body: [dynamic]Stmt }
 Call_Stmt     :: struct { call: ^Call }
+Assign_Stmt   :: struct { target, value: Expr, line: int }
 
 Parser :: struct {
 	tokens: [dynamic]Token,
@@ -150,6 +153,7 @@ parse_primary :: proc(p: ^Parser) -> Expr {
 	case .Map:    return parse_map(p)
 	case .Input:  return parse_input(p)
 	case .Length: return parse_len(p)
+	case .To_Number, .To_String: return parse_convert(p)
 
 	case .L_Paren:
 		advance(p)
@@ -391,6 +395,16 @@ parse_input :: proc(p: ^Parser) -> Expr {
 	return node
 }
 
+parse_convert :: proc(p: ^Parser) -> Expr {
+	tok := advance(p)
+
+	node := new(Convert_Expr)
+	node.target = tok.kind
+	node.line = tok.line
+	node.value = parse_unary(p)
+	return node
+}
+
 parse_len :: proc(p: ^Parser) -> Expr {
 	tok := expect(p, .Length)
 
@@ -551,6 +565,31 @@ parse_return :: proc(p: ^Parser) -> Stmt {
 	return node
 }
 
+parse_assignment :: proc(p: ^Parser) -> Stmt {
+	start := current(p)
+	target := parse_expression(p)
+
+	is_target := false
+	#partial switch _ in target {
+	case ^Var, ^Access:
+		is_target = true
+	}
+
+	if !is_target || !check(p, .Assign) {
+		syntax_error(start.line, "invalid statement (expected a variable or 'x from y' followed by '=')")
+	}
+	expect(p, .Assign)
+
+	node := new(Assign_Stmt)
+	node.target = target
+	node.line = start.line
+	node.value = parse_expression(p)
+
+	expect(p, .Newline)
+
+	return node
+}
+
 parse_statement :: proc(p: ^Parser) -> Stmt {
 	tok := current(p)
 
@@ -570,7 +609,10 @@ parse_statement :: proc(p: ^Parser) -> Stmt {
 			expect(p, .Newline)
 			return node
 		}
-		syntax_error(tok.line, "unknown statement: %s", tok.text)
+		return parse_assignment(p)
+
+	case .Int, .String, .L_Paren, .Minus:
+		return parse_assignment(p)
 
 	case .Let:      return parse_declaration(p)
 	case .Print:    return parse_print(p)
