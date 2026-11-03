@@ -15,6 +15,7 @@ Expr :: union {
 	^Call,
 	^Input_Expr,
 	^Length_Expr,
+	^Copy_Expr,
 	^Convert_Expr
 }
 
@@ -32,6 +33,7 @@ Access       :: struct { index, target: Expr, line: int }
 Call         :: struct { callee: Expr, arguments: [dynamic]Expr, line: int }
 Input_Expr   :: struct { prompt: Expr }
 Length_Expr  :: struct { value: Expr, line: int }
+Copy_Expr    :: struct { value: Expr, line: int }
 Convert_Expr :: struct { target: Token_Kind, value: Expr, line: int }
 
 Stmt :: union {
@@ -153,6 +155,7 @@ parse_primary :: proc(p: ^Parser) -> Expr {
 	case .Map:    return parse_map(p)
 	case .Input:  return parse_input(p)
 	case .Length: return parse_len(p)
+	case .Copy:   return parse_copy(p)
 	case .To_Number, .To_String: return parse_convert(p)
 
 	case .L_Paren:
@@ -174,6 +177,15 @@ parse_unary :: proc(p: ^Parser) -> Expr {
 		return node
 	}
 	return parse_primary(p)
+}
+
+parse_copy :: proc(p: ^Parser) -> Expr {
+	tok := expect(p, .Copy)
+
+	node := new(Copy_Expr)
+	node.line = tok.line
+	node.value = parse_unary(p)
+	return node
 }
 
 parse_access :: proc(p: ^Parser) -> Expr {
