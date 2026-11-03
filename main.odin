@@ -684,7 +684,7 @@ exec :: proc(s: Stmt) -> Flow {
 
 main :: proc() {
 	if len(os.args) < 2 {
-		fmt.eprintln("usage: tramezzo <file.tmz>")
+		fmt.eprintln("usage: pluma <file.pluma>")
 		os.exit(1)
 	}
 
