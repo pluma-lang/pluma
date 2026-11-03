@@ -21,6 +21,10 @@ map_set :: proc(m: ^Map, key: string, value: Value) {
 	m.entries[key] = value
 }
 
+Function_Value :: struct {
+    declaration: ^Function_Stmt,
+}
+
 Value :: union {
 	bool,
 	i64,
@@ -28,6 +32,7 @@ Value :: union {
 	string,
 	^List,
 	^Map,
+	^Function_Value
 }
 
 scopes:        [dynamic]map[string]Value
@@ -112,6 +117,8 @@ format_value :: proc(v: Value) -> string {
 		}
 		strings.write_byte(&b, '}')
 		return strings.to_string(b)
+	case ^Function_Value:
+		return "<function>"
 	case nil:
 		return "null"
 	}
@@ -119,7 +126,7 @@ format_value :: proc(v: Value) -> string {
 }
 
 truthy :: proc(v: Value) -> bool {
-	switch x in v {
+	#partial switch x in v {
 	case bool:   return x
 	case i64:    return x != 0
 	case f64:    return x != 0
@@ -140,7 +147,7 @@ as_f64 :: proc(v: Value) -> (f64, bool) {
 }
 
 values_equal :: proc(a, b: Value) -> bool {
-	switch x in a {
+	#partial switch x in a {
 	case nil:
 		return b == nil
 	case bool:
@@ -391,42 +398,46 @@ eval_access :: proc(n: ^Access) -> Value {
 }
 
 eval_call :: proc(n: ^Call) -> Value {
-	fn, found := functions[n.name]
-	if !found {
-		runtime_error(n.line, "undefined function: %s", n.name)
+	fn_value, ok := eval(n.callee).(^Function_Value)
+
+	if !ok {
+    runtime_error(n.line, "this value is not callable")
 	}
 
-	if len(n.args) != len(fn.params) {
-		runtime_error(
-			n.line,
-			"%s expects %d arguments, but %d were given",
-			n.name,
-			len(fn.params),
-			len(n.args),
-		)
-	}
+	fn := fn_value.declaration
 
-	values := make([dynamic]Value, 0, len(n.args))
-	defer delete(values)
-	for arg in n.args {
-		append(&values, eval(arg))
-	}
+    if len(n.arguments) != len(fn.params) {
+        runtime_error(
+            n.line,
+            "function expects %d arguments, but %d were given",
+            len(fn.params),
+            len(n.arguments),
+        )
+    }
 
-	create_scope()
+    values := make([dynamic]Value, 0, len(n.arguments))
+    defer delete(values)
 
-	for param, i in fn.params {
-		set_var(param, values[i])
-	}
+    for arg in n.arguments {
+        append(&values, eval(arg))
+    }
 
-	result: Value = nil
-	if exec_block(fn.body) == .Return {
-		result = return_value
-		return_value = nil
-	}
+    create_scope()
 
-	destroy_scope()
+    for param, i in fn.params {
+        set_var(param, values[i])
+    }
 
-	return result
+    result: Value = nil
+
+    if exec_block(fn.body) == .Return {
+        result = return_value
+        return_value = nil
+    }
+
+    destroy_scope()
+
+    return result
 }
 
 eval :: proc(e: Expr) -> Value {
@@ -554,7 +565,9 @@ exec :: proc(s: Stmt) -> Flow {
 		return .Return
 
 	case ^Function_Stmt:
-		functions[n.name] = n
+	    fn := new(Function_Value)
+	    fn.declaration = n
+	    set_var(n.name, fn)
 
 	case ^Call_Stmt:
 		_ = eval_call(n.call)
