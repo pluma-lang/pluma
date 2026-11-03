@@ -1,5 +1,10 @@
 # TODO list
 
+let todo = map with
+    "name": null
+    "description": null
+    "state": "undone"
+
 let todo_list = list with null
 
 while true then
@@ -9,11 +14,7 @@ while true then
     let choice = number input ">> "
 
     if choice == 1 then
-        let new_todo = map with
-            "name": null
-            "description": null
-            "state": "undone"
-
+        let new_todo = copy todo
         "name" from new_todo = input "Name: "
         "description" from new_todo = input "Description: "
 
