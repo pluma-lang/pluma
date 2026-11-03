@@ -13,7 +13,7 @@ let x = 42
 
 ```
 let age = 21
-let age = age + 1
+age = age + 1
 ```
 
 ## print
@@ -54,7 +54,7 @@ else
 let i = 0
 while i < 3 then
     print i
-    let i = i + 1
+    i = i + 1
 ```
 
 ## foreach
