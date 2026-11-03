@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:math"
 import "core:os"
 import "core:strings"
+import "core:strconv"
 
 List :: struct {
 	items: [dynamic]Value,
@@ -76,6 +77,16 @@ get_var :: proc(name: string, line: int) -> Value {
 
 set_var :: proc(name: string, value: Value) {
 	scopes[len(scopes) - 1][name] = value
+}
+
+assign_var :: proc(name: string, value: Value, line: int) {
+	for i := len(scopes) - 1; i >= 0; i -= 1 {
+		if name in scopes[i] {
+			scopes[i][name] = value
+			return
+		}
+	}
+	runtime_error(line, "undefined variable: %s (declare it with 'let' first)", name)
 }
 
 format_value :: proc(v: Value) -> string {
@@ -323,6 +334,32 @@ read_line :: proc() -> string {
 	return strings.trim_right(line, "\r")
 }
 
+eval_convert :: proc(n: ^Convert_Expr) -> Value {
+	v := eval(n.value)
+
+	if n.target == .To_String {
+		return format_value(v)
+	}
+
+	#partial switch x in v {
+	case i64, f64:
+		return v
+	case bool:
+		return i64(1) if x else i64(0)
+	case string:
+		s := strings.trim_space(x)
+		if i, ok := strconv.parse_i64(s); ok {
+			return i
+		}
+		if f, ok := strconv.parse_f64(s); ok {
+			return f
+		}
+		runtime_error(n.line, "cannot convert \"%s\" to number", x)
+	}
+
+	runtime_error(n.line, "this value cannot be converted to number")
+}
+
 eval_binary :: proc(n: ^Binary) -> Value {
 	if n.op == .And {
 		left := eval(n.left)
@@ -456,6 +493,8 @@ eval :: proc(e: Expr) -> Value {
 		return nil
 	case ^Var:
 		return get_var(n.name, n.line)
+	case ^Convert_Expr:
+		return eval_convert(n)
 	case ^Unary:
 		v := eval(n.operand)
 		if n.op == .Minus {
@@ -503,6 +542,38 @@ eval :: proc(e: Expr) -> Value {
 		runtime_error(n.line, "length needs a list or a string")
 	}
 	return nil
+}
+
+exec_assign :: proc(n: ^Assign_Stmt) {
+	value := eval(n.value)
+
+	#partial switch t in n.target {
+	case ^Var:
+		assign_var(t.name, value, t.line)
+
+	case ^Access:
+		index_value := eval(t.index)
+		container := eval(t.target)
+
+		#partial switch c in container {
+		case ^Map:
+			key, is_string := index_value.(string)
+			if !is_string {
+				runtime_error(t.line, "map keys must be strings")
+			}
+			map_set(c, key, value)
+
+		case ^List:
+			i := resolve_index(index_value, len(c.items), t.line)
+			c.items[i] = value
+
+		case string:
+			runtime_error(t.line, "strings are immutable: cannot assign to one of their characters")
+
+		case:
+			runtime_error(t.line, "this value does not support assignment")
+		}
+	}
 }
 
 exec_block :: proc(statements: [dynamic]Stmt) -> Flow {
@@ -571,6 +642,9 @@ exec :: proc(s: Stmt) -> Flow {
 
 	case ^Call_Stmt:
 		_ = eval_call(n.call)
+
+	case ^Assign_Stmt:
+		exec_assign(n)
 	}
 
 	return .Normal
