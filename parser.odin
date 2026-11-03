@@ -1,5 +1,6 @@
 package tramezzo
 
+import "core:rexcode/isa/ppc_vle/tablegen/generated"
 Expr :: union {
 	^Int_Lit,
 	^Float_Lit,
@@ -28,8 +29,8 @@ Binary     :: struct { op: Token_Kind, left, right: Expr, line: int }
 List_Lit   :: struct { elements: [dynamic]Expr }
 Map_Lit    :: struct { keys, values: [dynamic]Expr, line: int }
 Access     :: struct { index, target: Expr, line: int }
-Call       :: struct { name: string, args: [dynamic]Expr, line: int }
-Input_Expr :: struct { prompt: Expr } // prompt is nil when absent
+Call       :: struct { callee: Expr, arguments: [dynamic]Expr, line: int }
+Input_Expr :: struct { prompt: Expr }
 Length_Expr :: struct { value: Expr, line: int }
 
 Stmt :: union {
@@ -121,9 +122,6 @@ parse_primary :: proc(p: ^Parser) -> Expr {
 		return node
 
 	case .Ident:
-		if peek_kind(p) == .With {
-			return parse_call(p)
-		}
 		advance(p)
 		node := new(Var)
 		node.name = tok.text
@@ -177,13 +175,19 @@ parse_unary :: proc(p: ^Parser) -> Expr {
 parse_access :: proc(p: ^Parser) -> Expr {
 	node := parse_unary(p)
 
-	for check(p, .From) {
-		tok := advance(p)
-		target := parse_unary(p)
+	for {
+		if check(p, .From) {
+			tok := advance(p)
+			target := parse_unary(p)
 
-		access := new(Access)
-		access^ = Access{index = node, target = target, line = tok.line}
-		node = access
+			access := new(Access)
+			access^ = Access{index = node, target = target, line = tok.line}
+			node = access
+		} else if check(p, .With) {
+			node = parse_call(p, node)
+		} else {
+			break
+		}
 	}
 
 	return node
@@ -357,25 +361,24 @@ parse_map :: proc(p: ^Parser) -> Expr {
 	return node
 }
 
-parse_call :: proc(p: ^Parser) -> ^Call {
-	name := expect(p, .Ident)
-	expect(p, .With)
+parse_call :: proc(p: ^Parser, callee: Expr) -> ^Call {
+	tok := expect(p, .With)
 
-	call := new(Call)
-	call.name = name.text
-	call.line = name.line
+	node := new(Call)
+	node.callee = callee
+	node.line = tok.line
 
 	kind := current(p).kind
 	if kind != .Newline && kind != .R_Paren && kind != .EOF {
-		append(&call.args, parse_expression(p))
+		append(&node.arguments, parse_expression(p))
 
 		for check(p, .Comma) {
 			advance(p)
-			append(&call.args, parse_expression(p))
+			append(&node.arguments, parse_expression(p))
 		}
 	}
 
-	return call
+	return node
 }
 
 parse_input :: proc(p: ^Parser) -> Expr {
@@ -554,8 +557,16 @@ parse_statement :: proc(p: ^Parser) -> Stmt {
 	#partial switch tok.kind {
 	case .Ident:
 		if peek_kind(p) == .With {
+			name := advance(p)
+
+			variable := new(Var)
+			variable^ = Var{name = name.text, line = name.line}
+
+			callee: Expr = variable
+
 			node := new(Call_Stmt)
-			node.call = parse_call(p)
+			node.call = parse_call(p, callee)
+
 			expect(p, .Newline)
 			return node
 		}
