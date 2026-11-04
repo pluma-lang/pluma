@@ -58,7 +58,7 @@ keyword_kind :: proc(word: string) -> (Token_Kind, bool) {
 	case "not":                     return .Not, true
 	case "true":                    return .True, true
 	case "false":                   return .False, true
-	case "null":                    return .Null, true
+	case "nothing":                 return .Null, true
 	}
 	return .Ident, false
 }
