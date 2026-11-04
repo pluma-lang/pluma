@@ -568,7 +568,7 @@ eval :: proc(e: Expr) -> Value {
 	case ^Length_Expr:
 		v := eval(n.value)
 		#partial switch x in v {
-		case string: return i64(len(x))
+		case string: return i64(utf8.rune_count_in_string(x))
 		case ^List:  return i64(len(x.items))
 		case ^Map:   return i64(len(x.entries))
 		}
