@@ -5,6 +5,7 @@ import "core:math"
 import "core:os"
 import "core:strings"
 import "core:strconv"
+import "core:unicode/utf8"
 
 List :: struct {
 	items: [dynamic]Value,
@@ -659,8 +660,18 @@ exec :: proc(s: Stmt) -> Flow {
 					return .Return
 				}
 			}
+		case string:
+			i := 0
+			for i < len(s) {
+				_, width := utf8.decode_rune_in_string(s[i:])
+				set_var(n.var_name, s[i:i + width])
+				i += width
+				if exec_block(n.body) == .Return {
+					return .Return
+				}
+			}
 		case:
-			runtime_error(n.line, "'%s' is not a list or a map", n.list_name)
+			runtime_error(n.line, "'%s' is not a iterable", n.list_name)
 		}
 
 	case ^Return_Stmt:
