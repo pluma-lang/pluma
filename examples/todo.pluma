@@ -1,8 +1,8 @@
 # TODO list
 
 let todo = map with
-    "name": null
-    "description": null
+    "name": nothing
+    "description": nothing
     "state": "undone"
 
 let todo_list = list with null
