@@ -5,7 +5,7 @@ let todo = map with
     "description": nothing
     "state": "undone"
 
-let todo_list = list with null
+let todo_list = list with nothing
 
 while true then
     print "1: NEW"
