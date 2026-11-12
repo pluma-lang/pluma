@@ -110,10 +110,16 @@ print 1 from (2 from matrix)
 
 `length value` gives the number of elements in a list, entries in a map, or characters in a string.
 
+```
+print length "hello"
+print length julia
+```
+
 ## copy
 `copy identifier` copies the contents of a map or list instead of a reference
 
 ```
-print length "hello"
-print length julia
+let Person = map with "name": "Julia", "age": 21
+let addressing = Person # This variable is pointing to Person
+let copying = copy Person # This variable is copying the contents of Person
 ```
