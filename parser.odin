@@ -214,7 +214,7 @@ parse_factor :: proc(p: ^Parser) -> Expr {
 
 	for {
 		kind := current(p).kind
-		if kind != .Star && kind != .Caret && kind != .Slash && kind != .Percent {
+		if kind != .Star && kind != .Caret && kind != .Slash && kind != .SlashSlash && kind != .Percent {
 			break
 		}
 		op := advance(p)
