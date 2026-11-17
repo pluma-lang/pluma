@@ -267,6 +267,11 @@ int_arithmetic :: proc(op: Token_Kind, a, b: i64, line: int) -> Value {
 			runtime_error(line, "division by zero")
 		}
 		return f64(a) / f64(b)
+	case .SlashSlash:
+		if b == 0 {
+			runtime_error(line, "division by zero")
+		}
+		return a / b
 	case .Percent:
 		if b == 0 {
 			runtime_error(line, "modulo by zero")
@@ -409,7 +414,7 @@ eval_binary :: proc(n: ^Binary) -> Value {
 	right := eval(n.right)
 
 	#partial switch n.op {
-	case .Plus, .Minus, .Star, .Slash, .Percent, .Caret:
+	case .Plus, .Minus, .Star, .Slash, .SlashSlash, .Percent, .Caret:
 		return arithmetic(n.op, left, right, n.line)
 	case .Greater:    return compare_values(left, right, n.line) > 0
 	case .Less:       return compare_values(left, right, n.line) < 0
