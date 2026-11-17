@@ -34,7 +34,7 @@ print "Hi " + name
 
 | Operators | Meaning |
 |---|---|
-| `+` `-` `*` `/` `%` `^` | add, subtract, multiply, divide, modulo, power |
+| `+` `-` `*` `/` `//` `%` `^` | add, subtract, multiply, divide, integer division, modulo, power |
 | `>` `<` `>=` `<=` `==` `!=` | comparisons |
 | `and` `or` `not` | logic |
 | `-x` | negative number |
