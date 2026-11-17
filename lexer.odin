@@ -13,7 +13,7 @@ Token_Kind :: enum {
 	True, False, Null,
 	Ident, Int, Float, String,
 	Greater, Less, Greater_Eq, Less_Eq, Not_Eq, Eq_Eq, Assign,
-	Plus, Minus, Star, Slash, Percent, Caret,
+	Plus, Minus, Star, Slash, SlashSlash,  Percent, Caret,
 	L_Paren, R_Paren, Comma, Colon,
 	Indent, Dedent, Newline, EOF,
 }
@@ -155,7 +155,8 @@ tokenize_line :: proc(line: string, line_no: int, tokens: ^[dynamic]Token) {
 			case '+': kind = .Plus
 			case '-': kind = .Minus
 			case '*': kind = .Star
-			case '/': kind = .Slash
+			case '/':
+				if next == '/' { kind = .SlashSlash; width = 2 } else { kind = .Slash }
 			case '%': kind = .Percent
 			case '^': kind = .Caret
 			case '(': kind = .L_Paren
