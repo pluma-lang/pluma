@@ -83,6 +83,14 @@ print add with 2, 3
 
 `list with a, b, c` creates a list. `list with null` creates an empty list.
 
+### Slices
+
+```
+let numbers = list with 0,1,2,3,4,5
+
+print slice numbers from 1 to 4
+```
+
 ### Matrices
 ```
 let matrix = list with
