@@ -1,0 +1,23 @@
+function range with a, b
+    let r = list with nothing
+
+    while a < b then
+        r = r + list with a
+        a = a + 1
+
+    return r
+
+let L = list with 8,1,7,2,5,4,3,6,9,0
+
+let n = length L
+
+foreach i in range with 0, n-1 then
+    foreach j in range with 0, n-i-1 then
+        if j from L > (j+1) from L then
+            let a = j from L
+            let b = (j+1) from L
+
+            j from L = b
+            (j+1) from L = a
+
+print L
