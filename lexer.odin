@@ -119,10 +119,10 @@ tokenize_line :: proc(line: string, line_no: int, tokens: ^[dynamic]Token) {
 			}
 			i = j
 
-		case c == '"':
+		case c == '"' || c == '\'':
 			start := i + 1
 			j := start
-			for j < n && line[j] != '"' {
+			for j < n && line[j] != c {
 				j += 1
 			}
 			if j >= n {
