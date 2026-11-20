@@ -64,6 +64,12 @@ foreach n in numbers then
     print n
 ```
 
+### range
+```
+foreach n in range from 0 to 10 then
+    print n
+```
+
 ## function and return
 
 ```
