@@ -160,7 +160,7 @@ format_value :: proc(v: Value) -> string {
 	case ^Function_Value:
 		return "<function>"
 	case nil:
-		return "null"
+		return ""
 	}
 	return "null"
 }
