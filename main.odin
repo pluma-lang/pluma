@@ -570,6 +570,20 @@ eval :: proc(e: Expr) -> Value {
 			fmt.print(format_value(eval(n.prompt)))
 		}
 		return read_line()
+	case ^Range_Expr:
+		result := new(List)
+		from, ok1 := eval(n.from).(i64)
+		to, ok2 := eval(n.to).(i64)
+
+		if !ok1 || !ok2 {
+        	runtime_error(n.line, "range boundaries must be integers")
+    	}
+
+     	for i := from; i < to; i += 1 {
+      		append(&result.items, Value(i))
+      	}
+
+        return result
 	case ^Length_Expr:
 		v := eval(n.value)
 		#partial switch x in v {
