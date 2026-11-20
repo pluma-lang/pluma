@@ -649,7 +649,7 @@ exec :: proc(s: Stmt) -> Flow {
 		}
 
 	case ^Foreach_Stmt:
-		sequence := get_var(n.list_name, n.line)
+		sequence := eval(n.sequence)
 		#partial switch s in sequence {
 		case ^List:
 			for i := 0; i < len(s.items); i += 1 {
@@ -676,7 +676,7 @@ exec :: proc(s: Stmt) -> Flow {
 				}
 			}
 		case:
-			runtime_error(n.line, "'%s' is not a iterable", n.list_name)
+    		runtime_error(n.line, "this value is not iterable")
 		}
 
 	case ^Return_Stmt:
