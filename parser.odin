@@ -51,7 +51,7 @@ Stmt :: union {
 Let_Stmt      :: struct { name: string, value: Expr }
 Print_Stmt    :: struct { value: Expr }
 If_Stmt       :: struct { condition: Expr, body: [dynamic]Stmt, otherwise: [dynamic]Stmt }
-Foreach_Stmt  :: struct { var_name, list_name: string, body: [dynamic]Stmt, line: int }
+Foreach_Stmt :: struct { var_name: string, sequence: Expr, body: [dynamic]Stmt, line: int }
 While_Stmt    :: struct { condition: Expr, body: [dynamic]Stmt }
 Return_Stmt   :: struct { value: Expr }
 Function_Stmt :: struct { name: string, params: [dynamic]string, body: [dynamic]Stmt }
@@ -537,16 +537,12 @@ parse_foreach :: proc(p: ^Parser) -> Stmt {
 	advance(p)
 	expect(p, .In)
 
-	list := current(p)
-	if list.kind != .Ident {
-		syntax_error(list.line, "list name expected")
-	}
-	advance(p)
+	sequence := parse_expression(p)
 	expect(p, .Then)
 
 	node := new(Foreach_Stmt)
 	node.var_name = name.text
-	node.list_name = list.text
+	node.sequence = sequence
 	node.line = keyword.line
 	node.body = parse_block(p)
 
