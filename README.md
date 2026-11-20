@@ -20,6 +20,7 @@ age = age + 1
 
 ```
 print "hello"
+print 'how are you?'
 print 1 + 2
 ```
 
