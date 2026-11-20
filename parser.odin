@@ -15,6 +15,7 @@ Expr :: union {
 	^Call,
 	^Input_Expr,
 	^Range_Expr,
+	^Slice_Expr,
 	^Length_Expr,
 	^Copy_Expr,
 	^Convert_Expr
@@ -31,6 +32,7 @@ Binary       :: struct { op: Token_Kind, left, right: Expr, line: int }
 List_Lit     :: struct { elements: [dynamic]Expr }
 Map_Lit      :: struct { keys, values: [dynamic]Expr, line: int }
 Range_Expr	 :: struct { from, to: Expr, line: int}
+Slice_Expr	 :: struct { elements: Expr, from, to: Expr, line: int}
 Access       :: struct { index, target: Expr, line: int }
 Call         :: struct { callee: Expr, arguments: [dynamic]Expr, line: int }
 Input_Expr   :: struct { prompt: Expr }
@@ -156,6 +158,7 @@ parse_primary :: proc(p: ^Parser) -> Expr {
 	case .List:   return parse_list(p)
 	case .Map:    return parse_map(p)
 	case .Range:  return parse_range(p)
+	case .Slice:  return parse_slice(p)
 	case .Input:  return parse_input(p)
 	case .Length: return parse_len(p)
 	case .Copy:   return parse_copy(p)
@@ -516,6 +519,24 @@ parse_range :: proc(p: ^Parser) -> Expr {
 	tok := expect(p, .Range)
 
 	node := new(Range_Expr)
+
+	expect(p, .From)
+	node.from = parse_expression(p)
+
+	expect(p, .To)
+	node.to = parse_expression(p)
+
+	node.line = tok.line
+
+	return node
+}
+
+parse_slice :: proc(p: ^Parser) -> Expr {
+	node := new(Slice_Expr)
+
+	tok := expect(p, .Slice)
+
+	node.elements = parse_unary(p)
 
 	expect(p, .From)
 	node.from = parse_expression(p)
