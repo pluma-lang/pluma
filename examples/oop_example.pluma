@@ -1,0 +1,24 @@
+let Person = map with
+    "name": nothing
+    "age": nothing
+
+function make_person with name, age
+    let p = copy Person
+    "name" from p = name
+    "age" from p = age
+    return p
+
+function eat with person, food
+    print ("name" from person) + " ate a " + food
+
+function can_drink with person
+    if "age" from person >= 18 then
+        print ("name" from person) + " can drink!"
+    else
+        print ("name" from person) + " can NOT drink!"
+
+
+let bob = make_person with "Bob", 21
+
+eat with bob, "vegan burger"
+can_drink with bob
