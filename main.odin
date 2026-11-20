@@ -584,6 +584,36 @@ eval :: proc(e: Expr) -> Value {
       	}
 
         return result
+	case ^Slice_Expr:
+		to_slice := eval(n.elements)
+		from, ok1 := eval(n.from).(i64)
+		to, ok2 := eval(n.to).(i64)
+
+		if !ok1 || !ok2 {
+			runtime_error(n.line, "slice boundaries must be integers")
+		}
+
+		#partial switch c in to_slice {
+		case string:
+			length := i64(len(c))
+			if from < 0 || to > length || from > to {
+				runtime_error(n.line, "slice bounds out of range")
+			}
+			return c[from:to]
+		case ^List:
+			length := i64(len(c.items))
+			if from < 0 || to > length || from > to {
+				runtime_error(n.line, "slice bounds out of range")
+			}
+			result := new(List)
+			for i in from ..< to {
+				append(&result.items, c.items[i])
+			}
+			return result
+		}
+
+		runtime_error(n.line, "this value cannot be sliced")
+
 	case ^Length_Expr:
 		v := eval(n.value)
 		#partial switch x in v {
