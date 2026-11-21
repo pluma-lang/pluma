@@ -46,6 +46,7 @@ Stmt :: union {
 	^If_Stmt,
 	^Foreach_Stmt,
 	^While_Stmt,
+	^Append_Stmt,
 	^Return_Stmt,
 	^Function_Stmt,
 	^Call_Stmt,
@@ -55,8 +56,9 @@ Stmt :: union {
 Let_Stmt      :: struct { name: string, value: Expr }
 Print_Stmt    :: struct { value: Expr }
 If_Stmt       :: struct { condition: Expr, body: [dynamic]Stmt, otherwise: [dynamic]Stmt }
-Foreach_Stmt :: struct { var_name: string, sequence: Expr, body: [dynamic]Stmt, line: int }
+Foreach_Stmt  :: struct { var_name: string, sequence: Expr, body: [dynamic]Stmt, line: int }
 While_Stmt    :: struct { condition: Expr, body: [dynamic]Stmt }
+Append_Stmt	  :: struct { list: Expr, to_append: Expr, line: int }
 Return_Stmt   :: struct { value: Expr }
 Function_Stmt :: struct { name: string, params: [dynamic]string, body: [dynamic]Stmt }
 Call_Stmt     :: struct { call: ^Call }
@@ -515,6 +517,20 @@ parse_print :: proc(p: ^Parser) -> Stmt {
 	return node
 }
 
+parse_append :: proc(p: ^Parser) -> Stmt {
+	tok := expect(p, .Append)
+
+	node := new(Append_Stmt)
+	node.line = tok.line
+	node.to_append = parse_expression(p)
+	expect(p, .To)
+	node.list = parse_expression(p)
+
+	expect(p, .Newline)
+
+	return node
+}
+
 parse_range :: proc(p: ^Parser) -> Expr {
 	tok := expect(p, .Range)
 
@@ -664,6 +680,7 @@ parse_statement :: proc(p: ^Parser) -> Stmt {
 
 	case .Let:      return parse_declaration(p)
 	case .Print:    return parse_print(p)
+	case .Append:	return parse_append(p)
 	case .If:       return parse_if(p)
 	case .Foreach:  return parse_foreach(p)
 	case .While:    return parse_while(p)
