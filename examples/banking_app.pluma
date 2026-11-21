@@ -26,9 +26,8 @@ function authenticate with account
     return pass == ("password" from ("user" from account))
 
 let accounts = list with nothing
-let exit = false
 
-while not exit then
+while true then
     if length accounts == 0 then
         append (make_account with) to accounts
 
@@ -144,4 +143,4 @@ while not exit then
                         print "Successfully withdrawn"
 
     if choice == 6 then
-        exit = true
+        break
