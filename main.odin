@@ -44,6 +44,8 @@ return_value:  Value
 Flow :: enum {
 	Normal,
 	Return,
+	Break,
+	Continue
 }
 
 runtime_error :: proc(line: int, format: string, args: ..any) -> ! {
@@ -659,12 +661,13 @@ exec_assign :: proc(n: ^Assign_Stmt) {
 }
 
 exec_block :: proc(statements: [dynamic]Stmt) -> Flow {
-	for statement in statements {
-		if exec(statement) == .Return {
-			return .Return
-		}
-	}
-	return .Normal
+    for statement in statements {
+        flow := exec(statement)
+        if flow != .Normal {
+            return flow
+        }
+    }
+    return .Normal
 }
 
 exec :: proc(s: Stmt) -> Flow {
@@ -698,42 +701,83 @@ exec :: proc(s: Stmt) -> Flow {
 		}
 
 	case ^While_Stmt:
-		for truthy(eval(n.condition)) {
-			if exec_block(n.body) == .Return {
-				return .Return
-			}
-		}
+	    for truthy(eval(n.condition)) {
+	        flow := exec_block(n.body)
+
+	        if flow == .Return {
+	            return .Return
+	        }
+	        if flow == .Break {
+	            break
+	        }
+	        if flow == .Continue {
+	            continue
+	        }
+	    }
 
 	case ^Foreach_Stmt:
 		sequence := eval(n.sequence)
 		#partial switch s in sequence {
 		case ^List:
-			for i := 0; i < len(s.items); i += 1 {
-				set_var(n.var_name, s.items[i])
-				if exec_block(n.body) == .Return {
-					return .Return
-				}
-			}
+		    for i := 0; i < len(s.items); i += 1 {
+		        set_var(n.var_name, s.items[i])
+
+		        flow := exec_block(n.body)
+
+		        if flow == .Return {
+		            return .Return
+		        }
+		        if flow == .Break {
+		            break
+		        }
+		        if flow == .Continue {
+		            continue
+		        }
+		    }
 		case ^Map:
-			for key in s.order {
-				set_var(n.var_name, key)
-				if exec_block(n.body) == .Return {
-					return .Return
-				}
-			}
+		    for key in s.order {
+		        set_var(n.var_name, key)
+
+		        flow := exec_block(n.body)
+
+		        if flow == .Return {
+		            return .Return
+		        }
+		        if flow == .Break {
+		            break
+		        }
+		        if flow == .Continue {
+		            continue
+		        }
+		    }
 		case string:
-			i := 0
-			for i < len(s) {
-				_, width := utf8.decode_rune_in_string(s[i:])
-				set_var(n.var_name, s[i:i + width])
-				i += width
-				if exec_block(n.body) == .Return {
-					return .Return
-				}
-			}
+		    i := 0
+		    for i < len(s) {
+		        _, width := utf8.decode_rune_in_string(s[i:])
+		        set_var(n.var_name, s[i:i + width])
+		        i += width
+
+		        flow := exec_block(n.body)
+
+		        if flow == .Return {
+		            return .Return
+		        }
+		        if flow == .Break {
+		            break
+		        }
+		        if flow == .Continue {
+		            continue
+		        }
+		    }
 		case:
     		runtime_error(n.line, "this value is not iterable")
 		}
+
+	case ^Break_Stmt:
+    	return .Break
+
+	case ^Continue_Stmt:
+    	return .Continue
 
 	case ^Return_Stmt:
 		return_value = eval(n.value)
