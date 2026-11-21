@@ -9,7 +9,7 @@ let x = 42
 
 ## let
 
-`let name = value` creates a variable. Using `let` on an existing name changes its value.
+`let name = value` creates a variable.
 
 ```
 let age = 21
