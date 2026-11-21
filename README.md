@@ -92,6 +92,15 @@ let numbers = list with 0,1,2,3,4,5
 print slice numbers from 1 to 4
 ```
 
+### Appending
+```
+let l = list with nothing
+
+append 10 to l
+
+print l
+```
+
 ### Matrices
 ```
 let matrix = list with
