@@ -7,7 +7,7 @@ import "core:strings"
 
 Token_Kind :: enum {
 	Print, Input, Length, Range, Slice, Copy, To_Number, To_String, List, Map, With,
-	If, Else, Foreach, While, Then, In, From, To,
+	If, Else, Foreach, While, Then, In, From, To, Append,
 	Let, Function, Return,
 	And, Or, Not,
 	True, False, Null,
@@ -41,13 +41,14 @@ keyword_kind :: proc(word: string) -> (Token_Kind, bool) {
 	case "length":                  return .Length, true
 	case "range":					return .Range, true
 	case "slice":					return .Slice, true
+	case "append":					return .Append, true
 	case "copy":                  	return .Copy, true
 	case "list":                    return .List, true
 	case "map":                     return .Map, true
 	case "with":                    return .With, true
 	case "if":                      return .If, true
 	case "else":                    return .Else, true
-	case "foreach", "foreverytime": return .Foreach, true
+	case "foreach": 				return .Foreach, true
 	case "while":                   return .While, true
 	case "then":                    return .Then, true
 	case "in":                      return .In, true
