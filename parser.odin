@@ -46,6 +46,8 @@ Stmt :: union {
 	^If_Stmt,
 	^Foreach_Stmt,
 	^While_Stmt,
+	^Break_Stmt,
+	^Continue_Stmt,
 	^Append_Stmt,
 	^Return_Stmt,
 	^Function_Stmt,
@@ -58,6 +60,8 @@ Print_Stmt    :: struct { value: Expr }
 If_Stmt       :: struct { condition: Expr, body: [dynamic]Stmt, otherwise: [dynamic]Stmt }
 Foreach_Stmt  :: struct { var_name: string, sequence: Expr, body: [dynamic]Stmt, line: int }
 While_Stmt    :: struct { condition: Expr, body: [dynamic]Stmt }
+Break_Stmt	  :: struct { line: int }
+Continue_Stmt :: struct { line: int }
 Append_Stmt	  :: struct { list: Expr, to_append: Expr, line: int }
 Return_Stmt   :: struct { value: Expr }
 Function_Stmt :: struct { name: string, params: [dynamic]string, body: [dynamic]Stmt }
@@ -517,17 +521,39 @@ parse_print :: proc(p: ^Parser) -> Stmt {
 	return node
 }
 
+parse_break :: proc(p: ^Parser) -> Stmt {
+	tok := expect(p, .Break)
+
+	node := new(Break_Stmt)
+	node.line = tok.line
+
+	expect(p, .Newline)
+
+	return node
+}
+
+parse_continue :: proc(p: ^Parser) -> Stmt {
+	tok := expect(p, .Continue)
+
+	node := new(Continue_Stmt)
+	node.line = tok.line
+
+	expect(p, .Newline)
+
+	return node
+}
+
 parse_append :: proc(p: ^Parser) -> Stmt {
 	tok := expect(p, .Append)
 
 	node := new(Append_Stmt)
 	node.line = tok.line
+
 	node.to_append = parse_expression(p)
 	expect(p, .To)
 	node.list = parse_expression(p)
 
 	expect(p, .Newline)
-
 	return node
 }
 
@@ -537,12 +563,12 @@ parse_range :: proc(p: ^Parser) -> Expr {
 	node := new(Range_Expr)
 
 	expect(p, .From)
+	node.line = tok.line
 	node.from = parse_expression(p)
 
 	expect(p, .To)
 	node.to = parse_expression(p)
 
-	node.line = tok.line
 
 	return node
 }
@@ -684,6 +710,8 @@ parse_statement :: proc(p: ^Parser) -> Stmt {
 	case .If:       return parse_if(p)
 	case .Foreach:  return parse_foreach(p)
 	case .While:    return parse_while(p)
+	case .Break:    return parse_break(p)
+	case .Continue: return parse_continue(p)
 	case .Return:   return parse_return(p)
 	case .Function: return parse_function(p)
 	}
