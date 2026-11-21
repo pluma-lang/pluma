@@ -1,0 +1,147 @@
+let Account = map with
+    "user": nothing
+    "amount": 0
+
+let User = map with
+    "username": nothing
+    "password": nothing
+
+function make_user with uname, pwd
+    let new = copy User
+    "username" from new = uname
+    "password" from new = pwd
+    return new
+
+function make_account with
+    print "Create a new account"
+    let uname = input "Enter a username: "
+    let pwd = input "Enter a password: "
+    let new = copy Account
+    "user" from new = make_user with uname, pwd
+    return new
+
+function authenticate with account
+    print "Enter password for " + ("username" from ("user" from account))
+    let pass = input "-->> "
+    return pass == ("password" from ("user" from account))
+
+let accounts = list with nothing
+let exit = false
+
+while not exit then
+    if length accounts == 0 then
+        append (make_account with) to accounts
+
+    print "Operations"
+    print "1. Make new account"
+    print "2. Transfer"
+    print "3. Check balance"
+    print "4. Deposit"
+    print "5. Withdraw"
+    print "6. Exit"
+
+    let choice = number input ">> "
+
+    if choice == 1 then
+        append (make_account with) to accounts
+
+    if choice == 2 then
+        print "Choose who transfers"
+        foreach a in range from 0 to length accounts then
+            print string (a+1) + ". " + ("username" from ("user" from (a from accounts)))
+
+        let acc = number input "-->> "
+
+        print "Choose who receives"
+        foreach a in range from 0 to length accounts then
+            print string (a+1) + ". " + ("username" from ("user" from (a from accounts)))
+
+        let acc2 = number input "-->> "
+
+        if acc < 1 or acc > length accounts or acc2 < 1 or acc2 > length accounts then
+            print "Invalid account"
+        else
+            let sender = (acc-1) from accounts
+            let receiver = (acc2-1) from accounts
+
+            if acc == acc2 then
+                print "Can't transfer to the same account"
+            else
+                if authenticate with sender then
+                    print "Amount to transfer"
+                    let am = number input "-->> "
+
+                    if am <= 0 then
+                        print "Amount must be positive"
+                    else
+                        if ("amount" from sender) < am then
+                            print "Insufficient funds"
+                        else
+                            "amount" from receiver = ("amount" from receiver) + am
+                            "amount" from sender = ("amount" from sender) - am
+                            print "Successfully transferred"
+
+    if choice == 3 then
+        print "Choose who to check"
+        foreach a in range from 0 to length accounts then
+            print string (a+1) + ". " + ("username" from ("user" from (a from accounts)))
+
+        let acc = number input "-->> "
+
+        if acc < 1 or acc > length accounts then
+            print "Invalid account"
+        else
+            let account = (acc-1) from accounts
+
+            if authenticate with account then
+                print "Balance is: " + string ("amount" from account) + "$"
+
+    if choice == 4 then
+        print "Choose who to deposit into"
+        foreach a in range from 0 to length accounts then
+            print string (a+1) + ". " + ("username" from ("user" from (a from accounts)))
+
+        let acc = number input "-->> "
+
+        if acc < 1 or acc > length accounts then
+            print "Invalid account"
+        else
+            let account = (acc-1) from accounts
+
+            if authenticate with account then
+                print "Select amount"
+                let am = number input "-->> "
+
+                if am <= 0 then
+                    print "Amount must be positive"
+                else
+                    "amount" from account = ("amount" from account) + am
+                    print "Successfully deposited"
+
+    if choice == 5 then
+        print "Choose who to withdraw from"
+        foreach a in range from 0 to length accounts then
+            print string (a+1) + ". " + ("username" from ("user" from (a from accounts)))
+
+        let acc = number input "-->> "
+
+        if acc < 1 or acc > length accounts then
+            print "Invalid account"
+        else
+            let account = (acc-1) from accounts
+
+            if authenticate with account then
+                print "Select amount"
+                let am = number input "-->> "
+
+                if am <= 0 then
+                    print "Amount must be positive"
+                else
+                    if ("amount" from account) < am then
+                        print "Insufficient funds"
+                    else
+                        "amount" from account = ("amount" from account) - am
+                        print "Successfully withdrawn"
+
+    if choice == 6 then
+        exit = true
