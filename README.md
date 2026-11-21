@@ -71,6 +71,11 @@ foreach n in range from 0 to 10 then
     print n
 ```
 
+## Break/Continue
+
+`continue` skips the rest of the loop code and continues to the next iteration
+`break` interrupts a loop entirely
+
 ## function and return
 
 ```
