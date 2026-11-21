@@ -678,6 +678,18 @@ exec :: proc(s: Stmt) -> Flow {
 	case ^Print_Stmt:
 		fmt.println(format_value(eval(n.value)))
 
+	case ^Append_Stmt:
+		l := eval(n.list)
+		elem := eval(n.to_append)
+
+		list_ptr, ok := l.(^List)
+
+		if !ok {
+			runtime_error(n.line, "append target must be a list")
+		}
+
+		append(&list_ptr.items, elem)
+
 	case ^If_Stmt:
 		if truthy(eval(n.condition)) {
 			return exec_block(n.body)
