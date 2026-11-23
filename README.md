@@ -19,6 +19,7 @@ let x = 10
 let y be 20
 
 x is x + 1
+x = x * 2
 print x
 ```
 
