@@ -9,12 +9,12 @@ Token_Kind :: enum {
 	Print, Input, Length, Range, Slice, Copy, To_Number, To_String, List, Map, With,
 	Minimum, Maximum, Of,
 	If, Else, Foreach, While, Then, In, From, To, Append, Break, Continue,
-	Let, Function, Return,
+	Let, Function, Return, Is,
 	And, Or, Not,
 	True, False, Null,
 	Ident, Int, Float, String,
 	Greater, Less, Greater_Eq, Less_Eq, Not_Eq, Eq_Eq, Assign,
-	Plus, Minus, Star, Slash, SlashSlash,  Percent, Caret,
+	Plus, Minus, Star, Slash, SlashSlash, Percent, Caret,
 	L_Paren, R_Paren, Comma, Colon,
 	Indent, Dedent, Newline, EOF,
 }
@@ -62,6 +62,7 @@ keyword_kind :: proc(word: string) -> (Token_Kind, bool) {
 	case "to":						return .To, true
 	case "let":                     return .Let, true
 	case "be":						return .Assign, true
+	case "is":						return .Is, true
 	case "function":                return .Function, true
 	case "return":                  return .Return, true
 	case "and":                     return .And, true

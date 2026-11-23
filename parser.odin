@@ -691,10 +691,10 @@ parse_assignment :: proc(p: ^Parser) -> Stmt {
 		is_target = true
 	}
 
-	if !is_target || !check(p, .Assign) {
-		syntax_error(start.line, "invalid statement (expected a variable or 'x from y' followed by '=')")
+	if !is_target || !(check(p, .Assign) || check(p, .Is)) {
+		syntax_error(start.line, "invalid statement (expected a variable or 'x from y' followed by 'is' or '=')")
 	}
-	expect(p, .Assign)
+	advance(p)
 
 	node := new(Assign_Stmt)
 	node.target = target
