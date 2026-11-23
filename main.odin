@@ -732,6 +732,31 @@ eval_extreme :: proc(value: Value, line: int, find_minimum: bool) -> Value {
 	return result
 }
 
+slice_bounds :: proc(from, to: i64, length: int) -> (lo, hi: int) {
+	l := from if from >= 0 else from + i64(length)
+	h := to   if to   >= 0 else to   + i64(length)
+	l = clamp(l, 0, i64(length))
+	h = clamp(h, 0, i64(length))
+	if h < l {
+		h = l
+	}
+	return int(l), int(h)
+}
+
+rune_to_byte_offset :: proc(s: string, rune_index: int) -> int {
+	count := 0
+	i := 0
+	for i < len(s) {
+		if count == rune_index {
+			return i
+		}
+		_, width := utf8.decode_rune_in_string(s[i:])
+		i += width
+		count += 1
+	}
+	return len(s)
+}
+
 eval :: proc(e: Expr) -> Value {
 	switch n in e {
 	case nil:
@@ -832,6 +857,20 @@ eval :: proc(e: Expr) -> Value {
 		if !ok1 || !ok2 {
 			runtime_error(n.line, "slice boundaries must be integers")
 		}
+
+		#partial switch t in to_slice {
+		case string:
+			lo, hi := slice_bounds(from, to, utf8.rune_count_in_string(t))
+			return t[rune_to_byte_offset(t, lo):rune_to_byte_offset(t, hi)]
+
+		case ^List:
+			lo, hi := slice_bounds(from, to, len(t.items))
+			result := gc_new_list()
+			append(&result.items, ..t.items[lo:hi])
+			return result
+		}
+
+		runtime_error(n.line, "slice needs a list or a string")
 
 	case ^Length_Expr:
 		v := eval(n.value)
