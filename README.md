@@ -10,6 +10,7 @@ let x = 42
 ## let
 
 `let name = value` creates a variable.
+also `let name be value` creates a variable.
 
 ```
 let age = 21
