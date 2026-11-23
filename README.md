@@ -18,7 +18,7 @@ input "prompt"
 let x = 10
 let y be 20
 
-x = x + 1
+x is x + 1
 print x
 ```
 
