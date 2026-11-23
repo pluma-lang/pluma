@@ -57,6 +57,7 @@ keyword_kind :: proc(word: string) -> (Token_Kind, bool) {
 	case "from":                    return .From, true
 	case "to":						return .To, true
 	case "let":                     return .Let, true
+	case "be":						return .Assign, true
 	case "function":                return .Function, true
 	case "return":                  return .Return, true
 	case "and":                     return .And, true
