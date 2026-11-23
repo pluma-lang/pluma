@@ -88,4 +88,6 @@ print range from 0 to 10 # with 10 excluded
 function function_name with [optional arguments]
   # code
   return expression # returning is optional
+
+function_name with [optional arguments]
 ```
