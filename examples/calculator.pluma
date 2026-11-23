@@ -1,0 +1,16 @@
+# CALCULATOR
+
+while true then
+    let n1 = number input "Insert the first number: "
+    let n2 = number input "Insert the second number: "
+    let op = input "Insert the operation (+ - * /): "
+
+    print "The result is:"
+    if op == "+" then
+        print n1+n2
+    if op == "-" then
+        print n1-n2
+    if op == "*" then
+        print n1*n2
+    if op == "/" and n2 != 0 then
+        print n1/n2

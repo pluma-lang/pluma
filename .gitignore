@@ -1,10 +1,6 @@
 adventure.pluma
-calculator.pluma
-example.pluma
-hello.pluma
 __pycache__/
 pluma-syntax/
 tests/
 pluma
-todo_list.pluma
 .vscode/

@@ -1,0 +1,151 @@
+
+let board be list with
+    (list with 0, 0, 0),
+    (list with 0, 0, 0),
+    (list with 0, 0, 0)
+
+function print_board with
+    foreach line in board then
+        let l be ''
+        foreach e in line then
+            if e == 0 then
+                l = l + '#'
+            if e == 1 then
+                l = l + 'X'
+            if e == 2 then
+                l = l + 'O'
+        print l
+
+function X_move with r, c
+    c from (r from board) = 1
+
+function O_move with r, c
+    c from (r from board) = 2
+
+function check_horizontal with player_num
+    foreach row in board then
+        let count be 0
+
+        foreach e in row then
+            if e == player_num then
+                count = count + 1
+
+        if count == 3 then
+            return true
+
+    return false
+
+function check_vertical with player_num
+    let col be 0
+
+    while col < 3 then
+        let count be 0
+
+        foreach row in board then
+            if col from row == player_num then
+                count = count + 1
+
+        if count == 3 then
+            return true
+
+        col = col + 1
+
+    return false
+
+function check_ldiag with player_num
+    let count be 0
+
+    foreach i in range from 0 to length board then
+        if i from (i from board) == player_num then
+            count = count + 1
+
+    return count == 3
+
+function check_rdiag with player_num
+    let count be 0
+
+    foreach i in range from 0 to length board then
+        let row = i from board
+        let j = length row - i - 1
+
+        if j from row == player_num then
+            count = count + 1
+
+    return count == 3
+
+function check_winner with player_num
+    if check_horizontal with player_num then
+        return true
+    if check_vertical with player_num then
+        return true
+    if check_ldiag with player_num then
+        return true
+    if check_rdiag with player_num then
+        return true
+
+    return false
+
+function check_draw with
+    foreach row in board then
+        foreach cell in row then
+            if cell == 0 then
+                return false
+
+    return true
+
+function valid_move with r, c
+    if r < 0 or r >= 3 then
+        return false
+    if c < 0 or c >= 3 then
+        return false
+
+    if c from (r from board) != 0 then
+        return false
+
+    return true
+
+function main_loop with
+    while true then
+        print_board with
+
+        let p1_r = number input "Player 1 row: "
+        let p1_c = number input "Player 1 column: "
+
+        if valid_move with p1_r, p1_c then
+            X_move with p1_r, p1_c
+        else
+            print "Invalid move!"
+            continue
+
+        if check_winner with 1 then
+            print_board with
+            print "Player 1 won!"
+            break
+
+        if check_draw with then
+            print_board with
+            print "It's a draw!"
+            break
+
+        print_board with
+
+        let p2_r = number input "Player 2 row: "
+        let p2_c = number input "Player 2 column: "
+
+        if valid_move with p2_r, p2_c then
+            O_move with p2_r, p2_c
+        else
+            print "Invalid move!"
+            continue
+
+        if check_winner with 2 then
+            print_board with
+            print "Player 2 won!"
+            break
+
+        if check_draw with then
+            print_board with
+            print "It's a draw!"
+            break
+
+main_loop with
