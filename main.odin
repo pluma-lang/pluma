@@ -55,6 +55,7 @@ Value :: union {
 }
 
 scopes:        [dynamic]map[string]Value
+frame_base:    int // index of the first scope that belongs to the running function call
 functions:     map[string]^Function_Stmt
 return_value:  Value
 
@@ -278,8 +279,13 @@ copy_value :: proc(v: Value, seen: ^map[rawptr]Value) -> Value {
 }
 
 get_var :: proc(name: string, line: int) -> Value {
-	#reverse for scope in scopes {
+	#reverse for scope in scopes[frame_base:] {
 		if value, ok := scope[name]; ok {
+			return value
+		}
+	}
+	if frame_base > 0 {
+		if value, ok := scopes[0][name]; ok {
 			return value
 		}
 	}
@@ -291,9 +297,15 @@ set_var :: proc(name: string, value: Value) {
 }
 
 assign_var :: proc(name: string, value: Value, line: int) {
-	for i := len(scopes) - 1; i >= 0; i -= 1 {
+	for i := len(scopes) - 1; i >= frame_base; i -= 1 {
 		if name in scopes[i] {
 			scopes[i][name] = value
+			return
+		}
+	}
+	if frame_base > 0 {
+		if name in scopes[0] {
+			scopes[0][name] = value
 			return
 		}
 	}
@@ -689,8 +701,13 @@ eval_call :: proc(n: ^Call) -> Value {
 		gc_push_root(value)
 	}
 
+	saved_frame_base := frame_base
 	create_scope()
-	defer destroy_scope()
+	frame_base = len(scopes) - 1
+	defer {
+		frame_base = saved_frame_base
+		destroy_scope()
+	}
 
 	for param, i in fn.params {
 		set_var(param, values[i])
@@ -732,6 +749,7 @@ eval_extreme :: proc(value: Value, line: int, find_minimum: bool) -> Value {
 	return result
 }
 
+// Normalizes slice bounds: negatives count from the end, then clamp to [0, length].
 slice_bounds :: proc(from, to: i64, length: int) -> (lo, hi: int) {
 	l := from if from >= 0 else from + i64(length)
 	h := to   if to   >= 0 else to   + i64(length)
@@ -743,6 +761,7 @@ slice_bounds :: proc(from, to: i64, length: int) -> (lo, hi: int) {
 	return int(l), int(h)
 }
 
+// Byte offset of the n-th rune, so UTF-8 strings slice by character, like `length` counts them.
 rune_to_byte_offset :: proc(s: string, rune_index: int) -> int {
 	count := 0
 	i := 0
