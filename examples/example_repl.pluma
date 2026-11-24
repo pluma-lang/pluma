@@ -1,0 +1,72 @@
+let token be map with
+    "type": nothing
+    "value": nothing
+
+function is_num with num
+    let numbers be list with '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+
+    foreach n in numbers then
+        if num == n then
+            return true
+
+    return false
+
+function make_token with type, value
+    let new be copy token
+    "type" from new is type
+    "value" from new is value
+    return new
+
+function tokenize with line
+    let tokens be list with nothing
+    let i be 0
+
+    while i < length line then
+        if is_num with (i from line) then
+            let j be i
+
+            while j < length line and is_num with (j from line) then
+                j is j + 1
+
+            append (make_token with "NUMBER", slice line from i to j) to tokens
+            i be j
+            continue
+        if i from line == '"' then
+            i is i + 1
+            let j be i
+
+            while j < length line and j from line != '"' then
+                j is j + 1
+
+            append (make_token with "STRING", slice line from i to j) to tokens
+            i be j + 1
+            continue
+        else
+            let j be i
+
+            while j < length line  and j from line != ' ' then
+                j is j + 1
+
+            let token be slice line from i to j
+
+            if token == "print" then
+                append "PRINT" to tokens
+
+            i is j + 1
+            continue
+        i is i + 1
+
+    return tokens
+
+function exec with tokens
+    let i be 0
+
+    while i < length tokens then
+        if i from tokens == "PRINT" then
+            print "value" from ((i+1) from tokens)
+            i is i + 2
+            continue
+        i is i + 1
+
+while true then
+    exec with (tokenize with (input ">> "))
