@@ -61,6 +61,21 @@ let a_map be map with
   "two": 2
 ```
 
+## Nothing
+```
+let empty_list be list with nothing
+# nothing is a value that rapresents no data at all
+```
+
+## Copy
+```
+let Person be map with
+  "name": nothing
+  "age": nothing
+
+let personCp be copy Person
+```
+
 ## Loops
 
 ### While
