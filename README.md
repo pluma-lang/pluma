@@ -25,7 +25,7 @@ print x
 
 ## Type conversion
 
-`number` converts a certain value to a number (either float or integer).
+`number` converts a certain value to a number (either float or integer).\
 `string` converts a value to a string instead
 
 ## Lists
