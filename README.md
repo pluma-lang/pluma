@@ -122,3 +122,20 @@ function function_name with [optional arguments]
 
 function_name with [optional arguments]
 ```
+
+### Anonymous functions
+```
+let duplicate be function with n
+  reuturn n * 2
+```
+
+## Objects
+```
+let Object_name be map with
+  "some value": nothing
+
+  "make": function with some_value # constructor
+    let new be copy itself
+    "some value" from new is some_value
+    return new
+```
