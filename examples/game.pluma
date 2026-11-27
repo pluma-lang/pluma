@@ -1,0 +1,132 @@
+let game_map be list with
+    (list with 1,0,0,0,0),
+    (list with 0,0,0,0,0),
+    (list with 0,0,0,0,0),
+    (list with 0,0,0,0,0),
+    (list with 0,0,0,0,2)
+
+let Entity be map with
+    "x": 0
+    "y": 0
+    "repr": nothing
+
+    "make": function with repr
+        let new be copy itself
+        "repr" from new is repr
+        return new
+
+    "move left": function with
+        let prev_x be nothing
+        if "x" from itself == 0 then
+            prev_x is "x" from itself
+        else
+            prev_x is ("x" from itself) - 1
+        let current_y be "y" from itself
+
+        if prev_x from (current_y from game_map) != 0 then
+            return nothing
+
+        if ("x" from itself) == 0 then
+            return nothing
+        ("x" from itself) from (("y" from itself) from game_map) is 0
+        "x" from itself is ("x" from itself) - 1
+        ("x" from itself) from (("y" from itself) from game_map) is ("repr" from itself)
+
+    "move right": function with
+        let next_x be nothing
+        if "x" from itself == 4 then
+            next_x is "x" from itself
+        else
+            next_x is ("x" from itself) + 1
+        let current_y be "y" from itself
+
+        if next_x from (current_y from game_map) != 0 then
+            return nothing
+
+        if ("x" from itself) == 4 then
+            return nothing
+        ("x" from itself) from (("y" from itself) from game_map) is 0
+        "x" from itself is ("x" from itself) + 1
+        ("x" from itself) from (("y" from itself) from game_map) is ("repr" from itself)
+
+    "move up": function with
+        let current_x be "x" from itself
+        let prev_y be nothing
+        if "y" from itself == 0 then
+            prev_y is "y" from itself
+        else
+            prev_y is ("y" from itself) - 1
+
+        if current_x from (prev_y from game_map) != 0 then
+            return nothing
+
+        if ("y" from itself) == 0 then
+            return nothing
+        ("x" from itself) from (("y" from itself) from game_map) is 0
+        "y" from itself is ("y" from itself) - 1
+        ("x" from itself) from (("y" from itself) from game_map) is ("repr" from itself)
+
+    "move down": function with
+        let current_x be "x" from itself
+        let next_y be nothing
+        if "y" from itself == 4 then
+            next_y is "y" from itself
+        else
+            next_y is ("y" from itself) + 1
+
+        if current_x from (next_y from game_map) != 0 then
+            return nothing
+
+        if ("y" from itself) == 4 then
+            return nothing
+        ("x" from itself) from (("y" from itself) from game_map) is 0
+        "y" from itself is ("y" from itself) + 1
+        ("x" from itself) from (("y" from itself) from game_map) is ("repr" from itself)
+
+
+function print_map with
+    foreach row in game_map then
+        let buf be ''
+        foreach column in row then
+            if column == 1 then
+                buf is buf + '@'
+            if column == 2 then
+                buf is buf + '#'
+            if column == 0 then
+                buf is buf + '_'
+        print buf
+
+let player be ("make" from Entity) with 1
+let enemy be ("make" from Entity) with 2
+"x" from enemy is 4
+"y" from enemy is 4
+
+while true then
+    print_map with
+    let move be input "(w a s d): "
+
+    if move == 'a' then
+        ("move left" from player) with
+
+    if move == 's' then
+        ("move down" from player) with
+
+    if move == 'w' then
+        ("move up" from player) with
+
+    if move == 'd' then
+        ("move right" from player) with
+
+    let direction be random from 1 to 4
+
+    if direction == 1 then
+        ("move up" from enemy) with
+
+    if direction == 2 then
+        ("move left" from enemy) with
+
+    if direction == 3 then
+        ("move down" from enemy) with
+
+    if direction == 4 then
+        ("move right" from enemy) with
