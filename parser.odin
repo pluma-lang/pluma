@@ -435,22 +435,48 @@ parse_map :: proc(p: ^Parser) -> Expr {
 	return node
 }
 
-parse_call_statement :: proc(p: ^Parser) -> Stmt {
+parse_expression_statement :: proc(p: ^Parser) -> Stmt {
+	start := current(p)
 	expr := parse_expression(p)
 
-	node := new(Call_Stmt)
+	if check(p, .Assign) || check(p, .Is) {
+		is_target := false
 
-	#partial switch call in expr {
+		#partial switch _ in expr {
+		case ^Var, ^Access:
+			is_target = true
+		}
+
+		if !is_target {
+			syntax_error(start.line, "invalid assignment target")
+		}
+
+		advance(p)
+
+		node := new(Assign_Stmt)
+		node.target = expr
+		node.line = start.line
+		node.value = parse_expression(p)
+
+		expect(p, .Newline)
+		return node
+	}
+
+	call: ^Call
+
+	#partial switch c in expr {
 	case ^Call:
-		node.call = call
+		call = c
 	}
 
-	if node.call == nil {
-		syntax_error(current(p).line, "expected a function call")
+	if call == nil {
+		syntax_error(start.line, "expression statement must be a function call")
 	}
+
+	node := new(Call_Stmt)
+	node.call = call
 
 	expect(p, .Newline)
-
 	return node
 }
 
@@ -792,7 +818,7 @@ parse_statement :: proc(p: ^Parser) -> Stmt {
 		return parse_assignment(p)
 
 	case .L_Paren:
-		return parse_call_statement(p)
+		return parse_expression_statement(p)
 
 
 	case .Let:      return parse_declaration(p)
