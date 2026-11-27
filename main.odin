@@ -640,7 +640,7 @@ resolve_index :: proc(index_value: Value, length: int, line: int) -> i64 {
 	return i
 }
 
-eval_access :: proc(n: ^Access) -> Value {
+eval_access_with_receiver :: proc(n: ^Access) -> (Value, Value, bool) {
 	index_value := eval(n.index)
 	target := eval(n.target)
 
@@ -650,26 +650,41 @@ eval_access :: proc(n: ^Access) -> Value {
 		if !is_string {
 			runtime_error(n.line, "map keys must be strings")
 		}
+
 		value, found := t.entries[key]
 		if !found {
 			runtime_error(n.line, "key not found: %s", key)
 		}
-		return value
+
+		return value, target, true
 
 	case ^List:
 		i := resolve_index(index_value, len(t.items), n.line)
-		return t.items[i]
+		return t.items[i], nil, false
 
 	case string:
 		i := resolve_index(index_value, len(t), n.line)
-		return t[i:i + 1]
+		return t[i:i + 1], nil, false
 	}
 
 	runtime_error(n.line, "this value cannot be indexed")
 }
 
+eval_access :: proc(n: ^Access) -> Value {
+	value, _, _ := eval_access_with_receiver(n)
+	return value
+}
+
 eval_call :: proc(n: ^Call) -> Value {
-	callee := eval(n.callee)
+	callee: Value
+	receiver: Value
+	has_receiver := false
+
+	if access, ok := n.callee.(^Access); ok {
+		callee, receiver, has_receiver = eval_access_with_receiver(access)
+	} else {
+		callee = eval(n.callee)
+	}
 	fn_value, ok := callee.(^Function_Value)
 
 	if !ok {
@@ -712,6 +727,11 @@ eval_call :: proc(n: ^Call) -> Value {
 
 	for param, i in fn.params {
 		set_var(param, values[i])
+	}
+
+	if has_receiver {
+		gc_push_root(receiver)
+		set_var("itself", receiver)
 	}
 
 	result: Value = nil
@@ -915,7 +935,12 @@ eval :: proc(e: Expr) -> Value {
 
 	case ^Maximum_Expr:
 		return eval_extreme(eval(n.value), n.line, false)
+	case ^Function_Expr:
+		fn := gc_new_function()
+		fn.declaration = n.declaration
+		return fn
 	}
+
 
 	return nil
 }

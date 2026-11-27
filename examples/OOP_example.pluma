@@ -1,0 +1,15 @@
+let Person be map with
+    "name": nothing
+    "age": nothing
+
+    "make": function with name, age
+        "name" from itself is name
+        "age" from itself is age
+
+    "eat": function with food
+        print ("name" from itself) + " ate " + food
+
+let Bob be copy Person
+("make" from Bob) with "Bob", 21
+
+("eat" from Bob) with "popcorn

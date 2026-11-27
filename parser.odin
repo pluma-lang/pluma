@@ -22,6 +22,7 @@ Expr :: union {
 	^Convert_Expr,
 	^Minimum_Expr,
 	^Maximum_Expr,
+	^Function_Expr,
 }
 
 Int_Lit      :: struct { value: i64 }
@@ -45,6 +46,7 @@ Copy_Expr    :: struct { value: Expr, line: int }
 Convert_Expr :: struct { target: Token_Kind, value: Expr, line: int }
 Minimum_Expr :: struct { value: Expr, line: int }
 Maximum_Expr :: struct { value: Expr, line: int }
+Function_Expr :: struct { declaration: ^Function_Stmt }
 
 Stmt :: union {
 	^Let_Stmt,
@@ -178,6 +180,7 @@ parse_primary :: proc(p: ^Parser) -> Expr {
 	case .To_Number, .To_String: return parse_convert(p)
 	case .Minimum: return parse_min(p)
 	case .Maximum: return parse_max(p)
+	case .Function: return parse_function_expr(p)
 
 	case .L_Paren:
 		advance(p)
@@ -397,11 +400,20 @@ parse_map :: proc(p: ^Parser) -> Expr {
 		}
 
 		if multiline {
-			if check(p, .Newline) && peek_kind(p) != .Dedent {
+			if check(p, .Newline) {
+				if peek_kind(p) == .Dedent {
+					break
+				}
+
 				advance(p)
 				continue
 			}
-			break
+
+			if check(p, .Dedent) {
+				break
+			}
+
+			continue
 		}
 
 		if !had_comma {
@@ -410,10 +422,34 @@ parse_map :: proc(p: ^Parser) -> Expr {
 	}
 
 	if multiline {
-		newline := expect(p, .Newline)
+		line := current(p).line
+
+		if check(p, .Newline) {
+			line = advance(p).line
+		}
+
 		expect(p, .Dedent)
-		inject_at(&p.tokens, p.pos, Token{kind = .Newline, line = newline.line})
+		inject_at(&p.tokens, p.pos, Token{kind = .Newline, line = line})
 	}
+
+	return node
+}
+
+parse_call_statement :: proc(p: ^Parser) -> Stmt {
+	expr := parse_expression(p)
+
+	node := new(Call_Stmt)
+
+	#partial switch call in expr {
+	case ^Call:
+		node.call = call
+	}
+
+	if node.call == nil {
+		syntax_error(current(p).line, "expected a function call")
+	}
+
+	expect(p, .Newline)
 
 	return node
 }
@@ -511,7 +547,24 @@ parse_declaration :: proc(p: ^Parser) -> Stmt {
 	node.name = name.text
 	node.value = parse_expression(p)
 
-	expect(p, .Newline)
+	return node
+}
+
+parse_function_body :: proc(p: ^Parser) -> ^Function_Stmt {
+	node := new(Function_Stmt)
+
+	if check(p, .Ident) {
+		append(&node.params, advance(p).text)
+
+		for check(p, .Comma) {
+			advance(p)
+
+			token := expect(p, .Ident)
+			append(&node.params, token.text)
+		}
+	}
+
+	node.body = parse_block(p)
 
 	return node
 }
@@ -526,25 +579,20 @@ parse_function :: proc(p: ^Parser) -> Stmt {
 	advance(p)
 	expect(p, .With)
 
-	node := new(Function_Stmt)
+	node := parse_function_body(p)
 	node.name = name.text
 
-	if check(p, .Ident) {
-		append(&node.params, advance(p).text)
+	return node
+}
 
-		for check(p, .Comma) {
-			advance(p)
+parse_function_expr :: proc(p: ^Parser) -> Expr {
+	expect(p, .Function)
+	expect(p, .With)
 
-			token := current(p)
-			if token.kind != .Ident {
-				syntax_error(token.line, "parameter expected after the comma")
-			}
-			append(&node.params, token.text)
-			advance(p)
-		}
-	}
+	declaration := parse_function_body(p)
 
-	node.body = parse_block(p)
+	node := new(Function_Expr)
+	node.declaration = declaration
 
 	return node
 }
@@ -740,8 +788,12 @@ parse_statement :: proc(p: ^Parser) -> Stmt {
 		}
 		return parse_assignment(p)
 
-	case .Int, .String, .L_Paren, .Minus:
+	case .Int, .String, .Minus:
 		return parse_assignment(p)
+
+	case .L_Paren:
+		return parse_call_statement(p)
+
 
 	case .Let:      return parse_declaration(p)
 	case .Print:    return parse_print(p)
