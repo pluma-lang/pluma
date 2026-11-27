@@ -16,6 +16,7 @@ Expr :: union {
 	^Sort_Expr,
 	^Input_Expr,
 	^Range_Expr,
+	^Random_Expr,
 	^Slice_Expr,
 	^Length_Expr,
 	^Copy_Expr,
@@ -41,6 +42,7 @@ Access       :: struct { index, target: Expr, line: int }
 Call         :: struct { callee: Expr, arguments: [dynamic]Expr, line: int }
 Input_Expr   :: struct { prompt: Expr }
 Sort_Expr	 :: struct { value: Expr, line: int}
+Random_Expr	 :: struct { from, to: Expr, line: int}
 Length_Expr  :: struct { value: Expr, line: int }
 Copy_Expr    :: struct { value: Expr, line: int }
 Convert_Expr :: struct { target: Token_Kind, value: Expr, line: int }
@@ -174,7 +176,8 @@ parse_primary :: proc(p: ^Parser) -> Expr {
 	case .Range:  return parse_range(p)
 	case .Slice:  return parse_slice(p)
 	case .Input:  return parse_input(p)
-	case .Sort: return parse_sort(p)
+	case .Sort:   return parse_sort(p)
+	case .Random: return parse_random(p)
 	case .Length: return parse_len(p)
 	case .Copy:   return parse_copy(p)
 	case .To_Number, .To_String: return parse_convert(p)
@@ -431,6 +434,20 @@ parse_map :: proc(p: ^Parser) -> Expr {
 		expect(p, .Dedent)
 		inject_at(&p.tokens, p.pos, Token{kind = .Newline, line = line})
 	}
+
+	return node
+}
+
+parse_random :: proc(p: ^Parser) -> Expr {
+	tok := expect(p, .Random)
+	expect(p, .From)
+	node := new(Random_Expr)
+	node.from = parse_expression(p)
+
+	expect(p, .To)
+	node.to = parse_expression(p)
+
+	node.line = tok.line
 
 	return node
 }

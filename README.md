@@ -23,6 +23,11 @@ x = x * 2
 print x
 ```
 
+## Random
+```
+random from 0 to 10 # return a value from 0 to 10
+```
+
 ## Type conversion
 
 `number` converts a certain value to a number (either float or integer).\

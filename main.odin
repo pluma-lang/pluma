@@ -1,5 +1,6 @@
 package tramezzo
 
+import "core:math/rand"
 import "core:sort"
 import "core:fmt"
 import "core:math"
@@ -770,7 +771,6 @@ eval_extreme :: proc(value: Value, line: int, find_minimum: bool) -> Value {
 	return result
 }
 
-// Normalizes slice bounds: negatives count from the end, then clamp to [0, length].
 slice_bounds :: proc(from, to: i64, length: int) -> (lo, hi: int) {
 	l := from if from >= 0 else from + i64(length)
 	h := to   if to   >= 0 else to   + i64(length)
@@ -782,7 +782,6 @@ slice_bounds :: proc(from, to: i64, length: int) -> (lo, hi: int) {
 	return int(l), int(h)
 }
 
-// Byte offset of the n-th rune, so UTF-8 strings slice by character, like `length` counts them.
 rune_to_byte_offset :: proc(s: string, rune_index: int) -> int {
 	count := 0
 	i := 0
@@ -893,6 +892,18 @@ eval :: proc(e: Expr) -> Value {
       	}
 
         return result
+	case ^Random_Expr:
+		from, ok1 := eval(n.from).(i64)
+		to, ok2 := eval(n.to).(i64)
+
+		if !ok1 || !ok2 {
+			runtime_error(n.line, "random boundaries must be integers")
+		}
+
+		result := rand.int64_range(from, to)
+
+		return result
+
 	case ^Slice_Expr:
 		to_slice := eval(n.elements)
 
