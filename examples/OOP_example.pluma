@@ -12,4 +12,4 @@ let Person be map with
 let Bob be copy Person
 ("make" from Bob) with "Bob", 21
 
-("eat" from Bob) with "popcorn
+("eat" from Bob) with "popcorn"
