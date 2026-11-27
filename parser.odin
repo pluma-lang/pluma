@@ -13,6 +13,7 @@ Expr :: union {
 	^Map_Lit,
 	^Access,
 	^Call,
+	^Sort_Expr,
 	^Input_Expr,
 	^Range_Expr,
 	^Slice_Expr,
@@ -38,6 +39,7 @@ Slice_Expr	 :: struct { elements: Expr, from, to: Expr, line: int}
 Access       :: struct { index, target: Expr, line: int }
 Call         :: struct { callee: Expr, arguments: [dynamic]Expr, line: int }
 Input_Expr   :: struct { prompt: Expr }
+Sort_Expr	 :: struct { value: Expr, line: int}
 Length_Expr  :: struct { value: Expr, line: int }
 Copy_Expr    :: struct { value: Expr, line: int }
 Convert_Expr :: struct { target: Token_Kind, value: Expr, line: int }
@@ -170,6 +172,7 @@ parse_primary :: proc(p: ^Parser) -> Expr {
 	case .Range:  return parse_range(p)
 	case .Slice:  return parse_slice(p)
 	case .Input:  return parse_input(p)
+	case .Sort: return parse_sort(p)
 	case .Length: return parse_len(p)
 	case .Copy:   return parse_copy(p)
 	case .To_Number, .To_String: return parse_convert(p)
@@ -442,6 +445,16 @@ parse_input :: proc(p: ^Parser) -> Expr {
 	if check(p, .String) {
 		node.prompt = parse_primary(p)
 	}
+	return node
+}
+
+parse_sort :: proc(p: ^Parser) -> Expr {
+	tok := expect(p, .Sort)
+
+	node := new(Sort_Expr)
+	node.value = parse_expression(p)
+	node.line = tok.line
+
 	return node
 }
 

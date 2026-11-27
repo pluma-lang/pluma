@@ -50,6 +50,11 @@ print minimum of numbers
 print slice numbers from 1 to 3
 ```
 
+### Sort
+```
+sort numbers # this will sort the list using quick sort
+```
+
 ## Maps
 ```
 let a_map be map with "one": 1, "two": 2

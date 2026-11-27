@@ -9,7 +9,7 @@ Token_Kind :: enum {
 	Print, Input, Length, Range, Slice, Copy, To_Number, To_String, List, Map, With,
 	Minimum, Maximum, Of,
 	If, Else, Foreach, While, Then, In, From, To, Append, Break, Continue,
-	Let, Function, Return, Is,
+	Let, Function, Return, Is, Sort,
 	And, Or, Not,
 	True, False, Null,
 	Ident, Int, Float, String,
@@ -45,6 +45,7 @@ keyword_kind :: proc(word: string) -> (Token_Kind, bool) {
 	case "append":					return .Append, true
 	case "copy":                  	return .Copy, true
 	case "list":                    return .List, true
+	case "sort":					return .Sort, true
 	case "minimum":					return .Minimum, true
 	case "maximum":					return .Maximum, true
 	case "of":						return .Of, true

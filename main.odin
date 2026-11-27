@@ -1,5 +1,6 @@
 package tramezzo
 
+import "core:sort"
 import "core:fmt"
 import "core:math"
 import "core:os"
@@ -821,6 +822,16 @@ eval :: proc(e: Expr) -> Value {
 		seen := make(map[rawptr]Value)
 		defer delete(seen)
 		return copy_value(eval(n.value), &seen)
+	case ^Sort_Expr:
+		value := eval(n.value).(^List)
+
+		sort.quick_sort_proc(
+			value.items[:],
+			proc(a, b: Value) -> int {
+				return compare_values(a, b, 0)
+			},
+		)
+		return value
 	case ^Map_Lit:
 	    m := gc_new_map()
 
