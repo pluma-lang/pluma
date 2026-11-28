@@ -3,13 +3,14 @@ let Person be map with
     "age": nothing
 
     "make": function with name, age
-        "name" from itself is name
-        "age" from itself is age
+        let new be copy itself
+        "name" from new is name
+        "age" from new is age
+        return new
 
     "eat": function with food
         print ("name" from itself) + " ate " + food
 
-let Bob be copy Person
-("make" from Bob) with "Bob", 21
+let Bob be ("make" from Person) with "Bob", 21
 
 ("eat" from Bob) with "popcorn"
